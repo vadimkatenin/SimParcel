@@ -2,7 +2,7 @@
 
 <img src="Artwork/AppIcon-Source.png" alt="SimParcel app icon" width="128">
 
-**[katenin.dev/simparcel](https://katenin.dev/simparcel)** · [Download](https://github.com/VadimKat/SimParcel/releases/latest/download/SimParcel.dmg) · `brew install --cask vadimkat/tap/simparcel`
+**[katenin.dev/simparcel](https://katenin.dev/simparcel)** · [Download](https://github.com/vadimkatenin/SimParcel/releases/latest/download/SimParcel.dmg) · `brew install --cask vadimkatenin/tap/simparcel`
 
 **Drag and drop for the iOS Simulator.** Send photos, videos, Live Photos, contacts, `.app` builds, `.apns` push notifications, deep links and any other file to one simulator or to all running simulators at once.
 
@@ -56,12 +56,12 @@ A payload needs an `aps` dictionary and a `Simulator Target Bundle` key with you
 ### Homebrew
 
 ```bash
-brew install --cask vadimkat/tap/simparcel
+brew install --cask vadimkatenin/tap/simparcel
 ```
 
 ### Download
 
-Download [SimParcel.dmg](https://github.com/VadimKat/SimParcel/releases/latest/download/SimParcel.dmg) (or pick a version on [Releases](https://github.com/VadimKat/SimParcel/releases)), open it and drag SimParcel to Applications. The app is signed with Developer ID and notarized by Apple.
+Download [SimParcel.dmg](https://github.com/vadimkatenin/SimParcel/releases/latest/download/SimParcel.dmg) (or pick a version on [Releases](https://github.com/vadimkatenin/SimParcel/releases)), open it and drag SimParcel to Applications. The app is signed with Developer ID and notarized by Apple.
 
 ### Updates
 
@@ -70,7 +70,7 @@ SimParcel checks for updates once a day with [Sparkle](https://sparkle-project.o
 ### Build from source
 
 ```bash
-git clone https://github.com/VadimKat/SimParcel.git
+git clone https://github.com/vadimkatenin/SimParcel.git
 cd SimParcel
 open SimParcel.xcodeproj
 ```
@@ -98,7 +98,7 @@ Because the app runs `xcrun`, it can't use the App Sandbox and isn't distributed
 ## Troubleshooting
 
 - **No simulators listed:** check that an iOS runtime is installed (**Xcode → Settings → Components**) and that Command Line Tools point to that Xcode. Then click Refresh (⌘R).
-- **Something else?** Open an [issue](https://github.com/VadimKat/SimParcel/issues) or write to [support@katenin.dev](mailto:support@katenin.dev).
+- **Something else?** Open an [issue](https://github.com/vadimkatenin/SimParcel/issues) or write to [support@katenin.dev](mailto:support@katenin.dev).
 - **Imports go to Photos, not your app:** `addmedia` writes to the simulator's Photos library. Use your app's photo picker to reach the files.
 - **A push fails with "isn't allowed to show notifications":** open the app in the simulator and allow notifications first.
 - **"The Files app isn't available":** some simulator runtimes don't include Files. Try a simulator with another iOS version.

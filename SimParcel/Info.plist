@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>SUFeedURL</key>
-	<string>https://github.com/VadimKat/SimParcel/releases/latest/download/appcast.xml</string>
+	<string>https://github.com/vadimkatenin/SimParcel/releases/latest/download/appcast.xml</string>
 	<key>SUPublicEDKey</key>
 	<string>VlGr+WWUjrVzAkahZlc2kelqalOlej9HlQwmQTj+0fQ=</string>
 	<key>SUEnableAutomaticChecks</key>
