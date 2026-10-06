@@ -54,7 +54,13 @@ enum SimulatorService {
         case .photo, .video, .livePhoto, .contact:
             try await withStagedFiles(item.urls) { files in
                 // One call for all files, so a Live Photo's image and video are paired.
-                _ = try await simctl(["addmedia", device.id] + files.map(\.path))
+                do {
+                    _ = try await simctl(["addmedia", device.id] + files.map(\.path))
+                } catch SimulatorServiceError.commandFailed(let message) {
+                    throw SimulatorServiceError.commandFailed(
+                        mediaImportMessage(message, files: files, sources: item.urls)
+                    )
+                }
             }
         case .app:
             _ = try await simctl(["install", device.id, item.urls[0].path])
@@ -97,6 +103,8 @@ enum SimulatorService {
             let destination = folder.appendingPathComponent(source.lastPathComponent)
             do {
                 try fileManager.copyItem(at: source.resolvingSymlinksInPath(), to: destination)
+                // Finder's Locked flag is copied too. Only unlock the disposable copy.
+                try fileManager.setAttributes([.immutable: false], ofItemAtPath: destination.path)
             } catch {
                 throw SimulatorServiceError.commandFailed(
                     "Could not prepare \(source.lastPathComponent) for import: \(error.localizedDescription)"
@@ -107,6 +115,20 @@ enum SimulatorService {
         try Task.checkCancellation()
         return try await operation(files)
     }
+
+    /// Invalid media can make newer simctl versions crash while constructing the Photos error.
+    /// Keep this fallback specific to addmedia; the same exception elsewhere is still a crash.
+    static func mediaImportMessage(_ message: String, files: [URL], sources: [URL]) -> String {
+        if message.contains("simctl crashed: Invalid domain=nil in -[NSError initWithDomain:code:userInfo:]") {
+            return invalidMediaMessage
+        }
+
+        return zip(files, sources).reduce(message) { message, pair in
+            message.replacingOccurrences(of: pair.0.path, with: pair.1.path)
+        }
+    }
+
+    private static let invalidMediaMessage = "Photos couldn’t import this file. Check that it is a supported photo or video and isn’t damaged."
 
     /// The Files app's On My iPhone folder on a device.
     private static func filesFolder(on device: SimulatorDevice) async throws -> URL {
@@ -197,7 +219,7 @@ enum SimulatorService {
         }
 
         if output.contains("[PHPhotosErrorDomain] 3302") || output.contains("domain=PHPhotosErrorDomain, code=3302") {
-            return "Photos couldn’t import this file. Check that it is a supported photo or video and isn’t damaged."
+            return invalidMediaMessage
         }
 
         if let reason = output.range(of: "reason: '"),

@@ -12,6 +12,14 @@ struct SimulatorServiceTests {
         return folder
     }
 
+    private func removeLockedFolder(_ folder: URL) {
+        let files = FileManager.default.enumerator(at: folder, includingPropertiesForKeys: nil)?.allObjects as? [URL] ?? []
+        for file in files {
+            try? FileManager.default.setAttributes([.immutable: false], ofItemAtPath: file.path)
+        }
+        try? FileManager.default.removeItem(at: folder)
+    }
+
     @Test func stagesLivePhotoTogetherAndKeepsOriginals() async throws {
         let root = try makeFolder()
         defer { try? FileManager.default.removeItem(at: root) }
@@ -98,12 +106,41 @@ struct SimulatorServiceTests {
         let source = root.appendingPathComponent("photo.png")
         try Data("photo".utf8).write(to: source)
 
-        await #expect(throws: CancellationError.self) {
-            try await SimulatorService.withStagedFiles([source], temporaryDirectory: root) { _ in
-                throw CancellationError()
+        let task = Task {
+            try await SimulatorService.withStagedFiles([source], temporaryDirectory: root) { files in
+                #expect(FileManager.default.fileExists(atPath: files[0].path))
+                withUnsafeCurrentTask { $0?.cancel() }
+                try Task.checkCancellation()
             }
         }
+        await #expect(throws: CancellationError.self) { try await task.value }
         #expect(try FileManager.default.contentsOfDirectory(atPath: root.path) == ["photo.png"])
+    }
+
+    @Test func unlocksOnlyTheCopyAndRemovesIt() async throws {
+        let root = try makeFolder()
+        let source = root.appendingPathComponent("locked.png")
+        let data = Data("photo".utf8)
+        try data.write(to: source)
+        try FileManager.default.setAttributes([.immutable: true], ofItemAtPath: source.path)
+        defer {
+            // Also clean up a leftover locked copy if this regression ever returns.
+            removeLockedFolder(root)
+        }
+
+        try await SimulatorService.withStagedFiles([source], temporaryDirectory: root) { files in
+            let originalAttributes = try FileManager.default.attributesOfItem(atPath: source.path)
+            let copyAttributes = try FileManager.default.attributesOfItem(atPath: files[0].path)
+            let folderAttributes = try FileManager.default.attributesOfItem(atPath: files[0].deletingLastPathComponent().path)
+            let copy = try Data(contentsOf: files[0])
+            #expect(originalAttributes[.immutable] as? Bool == true)
+            #expect(copyAttributes[.immutable] as? Bool == false)
+            #expect(folderAttributes[.posixPermissions] as? Int == 0o700)
+            #expect(copy == data)
+        }
+        #expect(try FileManager.default.contentsOfDirectory(atPath: root.path) == ["locked.png"])
+        #expect(try FileManager.default.attributesOfItem(atPath: source.path)[.immutable] as? Bool == true)
+        #expect(try Data(contentsOf: source) == data)
     }
 
     @Test func stagesTheContentsOfASymbolicLink() async throws {
@@ -137,6 +174,27 @@ struct SimulatorServiceTests {
         #expect(!message.contains("Inaccessible"))
         #expect(!message.contains("permission"))
         #expect(SimulatorService.conciseMessage("Underlying error (domain=PHPhotosErrorDomain, code=3302):") == message)
+    }
+
+    @Test func explainsTheInvalidMediaCrashOnlyForMediaImports() {
+        let output = """
+        *** Terminating app due to uncaught exception 'NSInvalidArgumentException', reason: 'Invalid domain=nil in -[NSError initWithDomain:code:userInfo:]'
+        """
+        let message = SimulatorService.conciseMessage(output)
+        #expect(message.hasPrefix("simctl crashed:"))
+        #expect(SimulatorService.mediaImportMessage(message, files: [], sources: []).hasPrefix("Photos couldn’t import this file."))
+        #expect(SimulatorService.mediaImportMessage("simctl crashed: unrelated", files: [], sources: []) == "simctl crashed: unrelated")
+    }
+
+    @Test func restoresOriginalPathsInUnknownMediaErrors() {
+        let files = [URL(fileURLWithPath: "/tmp/SimParcel-test/live.jpg"), URL(fileURLWithPath: "/tmp/SimParcel-test/live.mov")]
+        let sources = [URL(fileURLWithPath: "/Users/test/Downloads/live.jpg"), URL(fileURLWithPath: "/Users/test/Downloads/live.mov")]
+        let output = "Failed to import '\(files[0].path)', error [PHPhotosErrorDomain] -1\nFailed to import '\(files[1].path)'"
+        let message = SimulatorService.mediaImportMessage(output, files: files, sources: sources)
+        #expect(!message.contains("SimParcel-test"))
+        #expect(message.contains(sources[0].path))
+        #expect(message.contains(sources[1].path))
+        #expect(message.contains("[PHPhotosErrorDomain] -1"))
     }
 
     @Test func explainsUnauthorizedPush() {
