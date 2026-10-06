@@ -96,6 +96,15 @@ private struct QueueTile: View {
                             .padding(5)
                     }
                 }
+                .overlay(alignment: .center) {
+                    if let itemFailure = item.failure,
+                        let recognizedFailure = model.parseFailure(itemFailure) {
+                        Text(recognizedFailure)
+                            .foregroundStyle(.red)
+                            .font(.headline)
+                            .padding(5)
+                    }
+                }
                 .overlay {
                     if isSending {
                         RoundedRectangle(cornerRadius: 12, style: .continuous)

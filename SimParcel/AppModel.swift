@@ -247,4 +247,11 @@ final class AppModel {
 
         await refreshDevices()
     }
+    
+    func parseFailure(_ failure: String) -> String? {
+        if failure.contains("[PHPhotosErrorDomain] 3302") {
+            return NSLocalizedString("File Inaccessible", comment: "A file is denied permission")
+        }
+        return nil
+    }
 }
