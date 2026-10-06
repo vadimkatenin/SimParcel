@@ -106,13 +106,13 @@ Because the app runs `xcrun`, it can't use the App Sandbox and isn't distributed
 
 ## Releasing
 
-Write the release notes to `release-notes/<version>.md`, then run:
+Set `MARKETING_VERSION` in `SimParcel.xcodeproj/project.pbxproj` and write the release notes to `release-notes/<version>.md` on a `fix/` or `feature/` branch. Merge the preparation PR after the `build` check passes, update your local `main`, then run:
 
 ```bash
 scripts/release.sh 1.1.0
 ```
 
-The script sets the version, builds a universal app, signs it with Developer ID, notarizes and staples the app and the DMG, and writes a Sparkle appcast. After you confirm, it tags the release, publishes it on GitHub with the zip, DMG and appcast, and updates the Homebrew cask. The one-time setup it needs is listed at the top of the script.
+The script checks that the version is already prepared and local `main` matches `origin/main`, builds a universal app, signs it with Developer ID, notarizes and staples the app and the DMG, and writes a Sparkle appcast. After you confirm, it tags the release, publishes it on GitHub with the zip, DMG and appcast, and updates the Homebrew cask. The one-time setup it needs is listed at the top of the script.
 
 ## License
 
