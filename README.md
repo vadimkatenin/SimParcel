@@ -89,7 +89,7 @@ The app runs Apple's command line tools:
 
 - `xcrun simctl list devices available --json` lists the simulators.
 - `xcrun simctl bootstatus <udid> -b` boots a simulator that isn't running.
-- `xcrun simctl addmedia <udid> <files…>` imports photos, videos and contacts. The files of a Live Photo go in a single call, which is how `simctl` pairs them.
+- `xcrun simctl addmedia <udid> <files…>` imports photos, videos and contacts. SimParcel first copies the files to a temporary folder so Simulator can read them even when the originals are in protected folders such as Downloads. The files of a Live Photo keep their names and go in a single call, which is how `simctl` pairs them. The temporary copies are removed when the command finishes; the originals stay in place.
 - `xcrun simctl install`, `push` and `openurl` handle apps, push payloads and links. Apps are installed first, so pushes and links in the same batch can reach them.
 - Other files are copied into the Files app's local storage (the `group.com.apple.FileProvider.LocalStorage` app group, found with `xcrun simctl get_app_container` or, on runtimes where that fails, by its container metadata). Each file is written under a temporary name and then renamed, so Files never shows a partial copy. A name that's taken gets a number: `report 2.pdf`.
 

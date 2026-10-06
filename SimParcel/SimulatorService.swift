@@ -52,8 +52,10 @@ enum SimulatorService {
 
         switch item.kind {
         case .photo, .video, .livePhoto, .contact:
-            // One call for all files, so a Live Photo's image and video are paired.
-            _ = try await simctl(["addmedia", device.id] + item.urls.map(\.path))
+            try await withStagedFiles(item.urls) { files in
+                // One call for all files, so a Live Photo's image and video are paired.
+                _ = try await simctl(["addmedia", device.id] + files.map(\.path))
+            }
         case .app:
             _ = try await simctl(["install", device.id, item.urls[0].path])
         case .push:
@@ -65,6 +67,45 @@ enum SimulatorService {
         case .file:
             try FilesStorage.copy(item.urls[0], into: try await filesFolder(on: device))
         }
+    }
+
+    /// CoreSimulator may not be able to read files in protected folders such as Downloads,
+    /// even when SimParcel can. Keep copies in an unprotected folder until addmedia finishes.
+    static func withStagedFiles<Result: Sendable>(
+        _ sources: [URL],
+        temporaryDirectory: URL = FileManager.default.temporaryDirectory,
+        operation: @Sendable ([URL]) async throws -> Result
+    ) async throws -> Result {
+        try Task.checkCancellation()
+        let fileManager = FileManager.default
+        let folder = temporaryDirectory.appendingPathComponent("SimParcel-\(UUID().uuidString)", isDirectory: true)
+        do {
+            try fileManager.createDirectory(
+                at: folder,
+                withIntermediateDirectories: false,
+                attributes: [.posixPermissions: 0o700]
+            )
+        } catch {
+            throw SimulatorServiceError.commandFailed("Could not prepare files for import: \(error.localizedDescription)")
+        }
+        defer {
+            try? fileManager.removeItem(at: folder)
+        }
+
+        let files = try sources.map { source in
+            try Task.checkCancellation()
+            let destination = folder.appendingPathComponent(source.lastPathComponent)
+            do {
+                try fileManager.copyItem(at: source.resolvingSymlinksInPath(), to: destination)
+            } catch {
+                throw SimulatorServiceError.commandFailed(
+                    "Could not prepare \(source.lastPathComponent) for import: \(error.localizedDescription)"
+                )
+            }
+            return destination
+        }
+        try Task.checkCancellation()
+        return try await operation(files)
     }
 
     /// The Files app's On My iPhone folder on a device.
@@ -153,6 +194,10 @@ enum SimulatorService {
     static func conciseMessage(_ output: String) -> String {
         if output.contains("Source is not authorized") {
             return "The app isn’t allowed to show notifications. Open it in the simulator, allow notifications, then try again."
+        }
+
+        if output.contains("[PHPhotosErrorDomain] 3302") || output.contains("domain=PHPhotosErrorDomain, code=3302") {
+            return "Photos couldn’t import this file. Check that it is a supported photo or video and isn’t damaged."
         }
 
         if let reason = output.range(of: "reason: '"),
