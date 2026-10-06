@@ -1,5 +1,5 @@
 #!/bin/bash
-# Releases SimParcel: sets the version, builds, signs with Developer ID, notarizes, packages a zip and
+# Releases SimParcel: checks the prepared version, builds, signs with Developer ID, notarizes, packages a zip and
 # a DMG, writes the Sparkle appcast, then (after you confirm) publishes a GitHub release and updates
 # the Homebrew cask.
 #
@@ -12,7 +12,8 @@
 #
 # Usage: scripts/release.sh 1.1.0
 #
-# Write the release notes to release-notes/<version>.md first. Lines starting with "- " become a list.
+# Merge the version change and release-notes/<version>.md into main through a PR first.
+# Lines starting with "- " in the release notes become a list.
 
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -44,21 +45,22 @@ step "Checking the setup"
 [[ -z $(git status --porcelain) ]] || fail "Commit or stash your changes first."
 [[ $(git branch --show-current) == "main" ]] || fail "Release from the main branch."
 [[ -f "$NOTES" ]] || fail "Write the release notes to $NOTES first."
+PROJECT_VERSIONS=$(sed -nE 's/^[[:space:]]*MARKETING_VERSION = ([0-9.]+);/\1/p' SimParcel.xcodeproj/project.pbxproj | sort -u)
+[[ "$PROJECT_VERSIONS" == "$VERSION" ]] \
+    || fail "Set MARKETING_VERSION to $VERSION and merge it with $NOTES into main through a PR before releasing."
 if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
     fail "Tag $TAG already exists."
 fi
-[[ $(security find-identity -v -p codesigning) == *"Developer ID Application"* ]] \
-    || fail "No Developer ID Application certificate. Create one in Xcode → Settings → Accounts → Manage Certificates."
 command -v gh >/dev/null || fail "Install the GitHub CLI: brew install gh"
 [[ $(gh api user --jq .login 2>/dev/null) == "${REPO%%/*}" ]] || fail "Sign in to the GitHub CLI as ${REPO%%/*}: gh auth login"
+git fetch origin main
+[[ $(git rev-parse HEAD) == $(git rev-parse FETCH_HEAD) ]] \
+    || fail "Local main must match origin/main. Merge the release preparation PR and update main before releasing."
+[[ $(security find-identity -v -p codesigning) == *"Developer ID Application"* ]] \
+    || fail "No Developer ID Application certificate. Create one in Xcode → Settings → Accounts → Manage Certificates."
 
 # MARK: - Version
 
-step "Setting the version to $VERSION"
-sed -i '' -E "s/MARKETING_VERSION = [0-9.]+;/MARKETING_VERSION = $VERSION;/" SimParcel.xcodeproj/project.pbxproj
-if [[ -n $(git status --porcelain) ]]; then
-    git commit -q -am "Set version to $VERSION"
-fi
 # Sparkle compares build numbers, so they must grow with every release. The commit count always does.
 BUILD_NUMBER=$(git rev-list --count HEAD)
 echo "Version $VERSION, build $BUILD_NUMBER"
@@ -196,7 +198,7 @@ fi
 
 step "Publishing the GitHub release"
 git tag -a "$TAG" -m "$APP_NAME $VERSION"
-git push origin main "$TAG"
+git push origin "$TAG"
 
 {
     cat "$NOTES"
