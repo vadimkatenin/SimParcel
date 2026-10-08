@@ -61,4 +61,47 @@ struct SimulatorListTests {
         #expect(SimulatorList.preferredDevice(in: shutDown)?.id == "B")
         #expect(SimulatorList.preferredDevice(in: []) == nil)
     }
+
+    @Test func separatesRunningDevicesAcrossRuntimesWithoutDuplicates() throws {
+        let parsed = try SimulatorList.parse(json)
+        let devices = parsed + [SimulatorDevice(
+            id: "E", name: "iPhone 15", runtime: SimulatorRuntime(platform: "iOS", version: [17, 5]),
+            isBooted: true, dataPath: nil
+        )]
+
+        let running = SimulatorList.runningDevices(in: devices)
+        let groups = SimulatorList.shutdownGroups(in: devices)
+        #expect(running.map(\.id) == ["C", "E"])
+        #expect(running.map(\.label) == ["iPad Air · iOS 27.1", "iPhone 15 · iOS 17.5"])
+        #expect(groups.map(\.runtime.name) == ["iOS 27.1", "iOS 26.5"])
+        #expect(groups.flatMap(\.devices).map(\.id) == ["B", "A"])
+        let listedIDs = running.map(\.id) + groups.flatMap(\.devices).map(\.id)
+        #expect(listedIDs.count == devices.count)
+        #expect(Set(listedIDs) == Set(devices.map(\.id)))
+    }
+
+    @Test func handlesNoRunningAndAllRunningDevices() throws {
+        let devices = try SimulatorList.parse(json)
+        let shutdown = devices.filter { !$0.isBooted }
+        #expect(SimulatorList.runningDevices(in: shutdown).isEmpty)
+        #expect(SimulatorList.shutdownGroups(in: shutdown).flatMap(\.devices).count == shutdown.count)
+
+        let running = devices.filter(\.isBooted)
+        #expect(SimulatorList.runningDevices(in: running) == running)
+        #expect(SimulatorList.shutdownGroups(in: running).isEmpty)
+        #expect(SimulatorList.runningDevices(in: []).isEmpty)
+        #expect(SimulatorList.shutdownGroups(in: []).isEmpty)
+    }
+
+    @Test func movesDeviceBetweenSectionsWhenItsStateChanges() throws {
+        let running = try #require(SimulatorList.parse(json).first { $0.id == "C" })
+        let shutdown = SimulatorDevice(
+            id: running.id, name: running.name, runtime: running.runtime, isBooted: false, dataPath: running.dataPath
+        )
+
+        #expect(SimulatorList.runningDevices(in: [running]).map(\.id) == ["C"])
+        #expect(SimulatorList.shutdownGroups(in: [running]).isEmpty)
+        #expect(SimulatorList.runningDevices(in: [shutdown]).isEmpty)
+        #expect(SimulatorList.shutdownGroups(in: [shutdown]).flatMap(\.devices).map(\.id) == ["C"])
+    }
 }

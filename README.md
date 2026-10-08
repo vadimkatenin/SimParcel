@@ -28,7 +28,7 @@ Drop files or whole folders onto the window, or choose them with **File → Choo
 | Any other file (PDF, JSON, ZIP, …) | A copy in **Files → On My iPhone** |
 
 - Send to one simulator, or choose **All Running Simulators** to send everything to each running simulator at once.
-- Simulators are grouped by iOS version, and running ones are listed first.
+- Running simulators appear in a separate **Running** section with their iOS version. The remaining simulators are grouped by iOS version below it.
 - A simulator that isn't running starts automatically and opens in Simulator.
 - Items that are sent leave the queue. Items that fail stay there, show the error, and can be retried.
 
