@@ -107,6 +107,16 @@ enum SimulatorList {
             .sorted { $0.runtime > $1.runtime }
     }
 
+    /// Running devices across all runtimes, newest runtime first.
+    static func runningDevices(in devices: [SimulatorDevice]) -> [SimulatorDevice] {
+        grouped(devices).flatMap(\.devices).filter(\.isBooted)
+    }
+
+    /// The remaining picker sections exclude devices already shown under Running.
+    static func shutdownGroups(in devices: [SimulatorDevice]) -> [SimulatorRuntimeGroup] {
+        grouped(devices.filter { !$0.isBooted })
+    }
+
     /// The device to select when nothing valid is selected: a running one, otherwise one from the newest runtime.
     static func preferredDevice(in devices: [SimulatorDevice]) -> SimulatorDevice? {
         let groups = grouped(devices)

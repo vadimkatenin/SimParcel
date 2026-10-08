@@ -132,7 +132,16 @@ private struct SimulatorBar: View {
 
                         Divider()
 
-                        ForEach(model.runtimeGroups) { group in
+                        if !model.runningDevices.isEmpty {
+                            Section("Running") {
+                                ForEach(model.runningDevices) { device in
+                                    Text(device.label)
+                                        .tag(device.id)
+                                }
+                            }
+                        }
+
+                        ForEach(model.shutdownRuntimeGroups) { group in
                             Section(group.runtime.name) {
                                 ForEach(group.devices) { device in
                                     Text(device.name)

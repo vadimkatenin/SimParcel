@@ -33,12 +33,12 @@ final class AppModel {
         }
     }
 
-    var runtimeGroups: [SimulatorRuntimeGroup] {
-        SimulatorList.grouped(devices)
+    var shutdownRuntimeGroups: [SimulatorRuntimeGroup] {
+        SimulatorList.shutdownGroups(in: devices)
     }
 
     var runningDevices: [SimulatorDevice] {
-        runtimeGroups.flatMap(\.devices).filter(\.isBooted)
+        SimulatorList.runningDevices(in: devices)
     }
 
     var isAllRunningSelected: Bool {
