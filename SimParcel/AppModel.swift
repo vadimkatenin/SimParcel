@@ -70,14 +70,18 @@ final class AppModel {
         items.filter { $0.failure != nil }.count
     }
 
-    func refreshDevices() async {
+    func refreshDevices(preservingStatus: Bool = false) async {
         guard !isRefreshing else {
             return
         }
 
+        let previousStatus = status
         isRefreshing = true
         defer {
             isRefreshing = false
+            if preservingStatus {
+                status = previousStatus
+            }
         }
 
         do {
@@ -219,7 +223,7 @@ final class AppModel {
             status = .success("Sent \(succeeded) \(noun) to \(destination).")
         }
 
-        await refreshDevices()
+        await refreshDevices(preservingStatus: true)
     }
 
     func showSelectedDevice() async {
@@ -245,6 +249,6 @@ final class AppModel {
             status = .failure("Could not open \(device.name): \(error.localizedDescription)")
         }
 
-        await refreshDevices()
+        await refreshDevices(preservingStatus: true)
     }
 }
