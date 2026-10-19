@@ -38,15 +38,6 @@ struct SimulatorRuntime: Hashable, Comparable, Sendable {
     }
 }
 
-enum SimulatorDeviceSet: String, Hashable, Sendable {
-    case standard
-    case previews
-
-    func arguments(for command: [String]) -> [String] {
-        (self == .previews ? ["--set", "previews"] : []) + command
-    }
-}
-
 struct SimulatorDevice: Identifiable, Hashable, Sendable {
     let udid: String
     let name: String
@@ -55,7 +46,14 @@ struct SimulatorDevice: Identifiable, Hashable, Sendable {
     let dataPath: String?
     let deviceSet: SimulatorDeviceSet
 
-    init(id: String, name: String, runtime: SimulatorRuntime, isBooted: Bool, dataPath: String?, deviceSet: SimulatorDeviceSet = .standard) {
+    init(
+        id: String,
+        name: String,
+        runtime: SimulatorRuntime,
+        isBooted: Bool,
+        dataPath: String?,
+        deviceSet: SimulatorDeviceSet = .standard
+    ) {
         self.udid = id
         self.name = name
         self.runtime = runtime

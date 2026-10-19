@@ -131,8 +131,13 @@ private struct SimulatorBar: View {
                             .tag(AppModel.allRunningID)
 
                         if !model.bootedCanvasDevices.isEmpty || model.isAllPreviewsSelected {
-                            Text("All Booted Canvas Devices")
+                            Text("simulators.canvas.allLabel")
                                 .tag(AppModel.allPreviewsID)
+                        }
+
+                        if model.isCanvasDestinationSelected && !model.isAllPreviewsSelected && model.selectedDevice == nil {
+                            Text("simulators.canvas.unavailableLabel")
+                                .tag(model.selectedDeviceID)
                         }
 
                         Divider()
@@ -147,7 +152,7 @@ private struct SimulatorBar: View {
                         }
 
                         if !model.bootedCanvasDevices.isEmpty {
-                            Section("Canvas Devices · Booted") {
+                            Section("simulators.canvas.bootedSection") {
                                 ForEach(model.bootedCanvasDevices) { device in
                                     Text(device.label)
                                         .tag(device.id)
@@ -219,40 +224,17 @@ private struct TargetStateLabel: View {
                 .frame(width: 7, height: 7)
                 .accessibilityHidden(true)
 
-            Text(text)
+            Text(model.targetStateText)
                 .lineLimit(1)
                 .truncationMode(.tail)
         }
         .font(.caption)
         .foregroundStyle(.secondary)
-        .help(text)
+        .help(model.targetStateText)
     }
 
     private var isRunning: Bool {
         !model.targets.isEmpty && model.targets.allSatisfy(\.isBooted)
-    }
-
-    private var text: String {
-        if model.isBroadcastSelected {
-            let running = model.targets
-            let state = model.isAllPreviewsSelected ? "booted" : "running"
-            switch running.count {
-            case 0:
-                return model.isAllPreviewsSelected ? "No Canvas devices are booted" : "No simulators are running"
-            case 1:
-                return "1 \(state) · \(running[0].name)"
-            default:
-                return "\(running.count) \(state) · \(running.map(\.name).joined(separator: ", "))"
-            }
-        }
-
-        guard let device = model.selectedDevice else {
-            return "Choose a simulator"
-        }
-
-        return device.isBooted
-            ? "\(device.runtime.name) · \(device.deviceSet == .previews ? "Canvas device · Booted" : "Running")"
-            : "\(device.runtime.name) · Starts automatically when you send"
     }
 }
 
@@ -357,7 +339,7 @@ private struct FooterBar: View {
                     await model.sendAll()
                 }
             } label: {
-                Text(sendTitle)
+                Text(model.sendTitle)
                     .frame(minWidth: 120)
             }
             .buttonStyle(.borderedProminent)
@@ -365,15 +347,6 @@ private struct FooterBar: View {
             .disabled(!model.canSend)
         }
         .controlSize(.large)
-    }
-
-    private var sendTitle: String {
-        let count = model.targets.count
-        let isCanvas = model.isAllPreviewsSelected || model.selectedDevice?.deviceSet == .previews
-        if model.isBroadcastSelected && count > 1 {
-            return "Send to \(count) \(isCanvas ? "Canvas Devices" : "Simulators")"
-        }
-        return isCanvas ? "Send to Canvas Device" : "Send to Simulator"
     }
 }
 
@@ -401,7 +374,7 @@ private struct StatusView: View {
     private var statusText: some View {
         switch model.status {
         case .idle:
-            Text(idleMessage)
+            Text(model.idleStatusMessage)
                 .foregroundStyle(.secondary)
         case .info(let message, let detail):
             Label(message, systemImage: "info.circle")
@@ -421,23 +394,6 @@ private struct StatusView: View {
             Label(message, systemImage: "exclamationmark.triangle.fill")
                 .foregroundStyle(.red)
                 .help(detail ?? message)
-        }
-    }
-
-    private var idleMessage: String {
-        if model.isBroadcastSelected && model.targets.isEmpty {
-            return model.isAllPreviewsSelected
-                ? "Open a Canvas preview in Xcode to boot a device, then refresh."
-                : "Start a simulator, or choose one from the list."
-        }
-
-        switch model.items.count {
-        case 0:
-            return "Add something to send."
-        case 1:
-            return "1 item ready"
-        case let count:
-            return "\(count) items ready"
         }
     }
 }

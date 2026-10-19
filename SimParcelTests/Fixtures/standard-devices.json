@@ -1,0 +1,11 @@
+{
+  "devices": {
+    "com.apple.CoreSimulator.SimRuntime.iOS-27-0": [
+      {
+        "udid": "AF68294A-7392-484C-AA10-DF401A4E3916",
+        "state": "Booted",
+        "name": "iPhone 17"
+      }
+    ]
+  }
+}

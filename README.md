@@ -29,7 +29,9 @@ Drop files or whole folders onto the window, or choose them with **File → Choo
 
 - Send to one simulator, or choose **All Running Simulators** to send everything to each running simulator at once.
 - Running simulators appear in a separate **Running** section with their iOS version. The remaining simulators are grouped by iOS version below it.
-- A simulator that isn't running starts automatically and opens in Simulator.
+- A simulator that isn't running starts automatically and opens in Simulator or Xcode 27’s Device Hub.
+- Booted Xcode Canvas devices appear in their own section. Send to one or choose **All Booted Canvas Devices**. Canvas devices are managed by Xcode and never start automatically; open a preview in Xcode, then refresh.
+- If a selected Canvas device shuts down, sending stays disabled until that device returns or you choose another target.
 - Items that are sent leave the queue. Items that fail stay there, show the error, and can be retried.
 
 ### Push payloads

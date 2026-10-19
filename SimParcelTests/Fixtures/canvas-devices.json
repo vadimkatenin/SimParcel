@@ -1,0 +1,11 @@
+{
+  "devices": {
+    "com.apple.CoreSimulator.SimRuntime.iOS-27-1": [
+      {
+        "udid": "E3FB3B79-88DB-4F51-A74C-308364C18BDB",
+        "state": "Shutdown",
+        "name": "iPhone Duo"
+      }
+    ]
+  }
+}

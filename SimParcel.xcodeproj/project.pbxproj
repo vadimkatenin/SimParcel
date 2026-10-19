@@ -26,6 +26,21 @@
 		A10000000000000000000011 /* FilesStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* FilesStorage.swift */; };
 		A10000000000000000000012 /* FilesStorageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000011 /* FilesStorageTests.swift */; };
 		A10000000000000000000013 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = A90000000000000000000011 /* Sparkle */; };
+		B10000000000000000000020 /* SimulatorApplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000020 /* SimulatorApplication.swift */; };
+		B30000000000000000000020 /* SimulatorApplication.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000020 /* SimulatorApplication.swift */; };
+		B10000000000000000000021 /* SimulatorDeviceSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000021 /* SimulatorDeviceSet.swift */; };
+		B30000000000000000000021 /* SimulatorDeviceSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000021 /* SimulatorDeviceSet.swift */; };
+		B10000000000000000000022 /* SimulatorServicing.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000022 /* SimulatorServicing.swift */; };
+		B30000000000000000000022 /* SimulatorServicing.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000022 /* SimulatorServicing.swift */; };
+		B10000000000000000000023 /* SimulatorSelectionStoring.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000023 /* SimulatorSelectionStoring.swift */; };
+		B30000000000000000000023 /* SimulatorSelectionStoring.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000023 /* SimulatorSelectionStoring.swift */; };
+		B10000000000000000000024 /* SimulatorCommandRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000024 /* SimulatorCommandRunner.swift */; };
+		B30000000000000000000024 /* SimulatorCommandRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000024 /* SimulatorCommandRunner.swift */; };
+		B10000000000000000000030 /* AppModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000030 /* AppModelTests.swift */; };
+		B10000000000000000000031 /* CanvasDeliveryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000031 /* CanvasDeliveryTests.swift */; };
+		B10000000000000000000040 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000040 /* Localizable.xcstrings */; };
+		B10000000000000000000041 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000009 /* AppModel.swift */; };
+		B10000000000000000000042 /* SimulatorFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000042 /* SimulatorFixtures.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -47,6 +62,15 @@
 		A20000000000000000000010 /* FilesStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilesStorage.swift; sourceTree = "<group>"; };
 		A20000000000000000000011 /* FilesStorageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FilesStorageTests.swift; sourceTree = "<group>"; };
 		A20000000000000000000012 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B20000000000000000000020 /* SimulatorApplication.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Simulators/Model/SimulatorApplication.swift; sourceTree = "<group>"; };
+		B20000000000000000000021 /* SimulatorDeviceSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Simulators/Model/SimulatorDeviceSet.swift; sourceTree = "<group>"; };
+		B20000000000000000000022 /* SimulatorServicing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Simulators/Model/SimulatorServicing.swift; sourceTree = "<group>"; };
+		B20000000000000000000023 /* SimulatorSelectionStoring.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Simulators/Model/SimulatorSelectionStoring.swift; sourceTree = "<group>"; };
+		B20000000000000000000024 /* SimulatorCommandRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Features/Simulators/Model/SimulatorCommandRunner.swift; sourceTree = "<group>"; };
+		B20000000000000000000030 /* AppModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModelTests.swift; sourceTree = "<group>"; };
+		B20000000000000000000031 /* CanvasDeliveryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasDeliveryTests.swift; sourceTree = "<group>"; };
+		B20000000000000000000040 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Main/Localizable.xcstrings; sourceTree = "<group>"; };
+		B20000000000000000000042 /* SimulatorFixtures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimulatorFixtures.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -82,6 +106,12 @@
 			isa = PBXGroup;
 			children = (
 				A20000000000000000000001 /* SimParcelApp.swift */,
+				B20000000000000000000020 /* SimulatorApplication.swift */,
+				B20000000000000000000021 /* SimulatorDeviceSet.swift */,
+				B20000000000000000000022 /* SimulatorServicing.swift */,
+				B20000000000000000000023 /* SimulatorSelectionStoring.swift */,
+				B20000000000000000000024 /* SimulatorCommandRunner.swift */,
+				B20000000000000000000040 /* Localizable.xcstrings */,
 				A20000000000000000000009 /* AppModel.swift */,
 				A20000000000000000000002 /* ContentView.swift */,
 				A20000000000000000000010 /* FilesStorage.swift */,
@@ -117,6 +147,9 @@
 			isa = PBXGroup;
 			children = (
 				A20000000000000000000011 /* FilesStorageTests.swift */,
+				B20000000000000000000042 /* SimulatorFixtures.swift */,
+				B20000000000000000000030 /* AppModelTests.swift */,
+				B20000000000000000000031 /* CanvasDeliveryTests.swift */,
 				A2000000000000000000000C /* QueueItemTests.swift */,
 				A2000000000000000000000B /* SimulatorListTests.swift */,
 				A2000000000000000000000F /* SimulatorServiceTests.swift */,
@@ -210,6 +243,7 @@
 			files = (
 				A1000000000000000000000D /* AppIcon.icon in Resources */,
 				A10000000000000000000004 /* Assets.xcassets in Resources */,
+				B10000000000000000000040 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -221,6 +255,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				A10000000000000000000001 /* SimParcelApp.swift in Sources */,
+				B10000000000000000000020 /* SimulatorApplication.swift in Sources */,
+				B10000000000000000000021 /* SimulatorDeviceSet.swift in Sources */,
+				B10000000000000000000022 /* SimulatorServicing.swift in Sources */,
+				B10000000000000000000023 /* SimulatorSelectionStoring.swift in Sources */,
+				B10000000000000000000024 /* SimulatorCommandRunner.swift in Sources */,
 				A10000000000000000000007 /* AppModel.swift in Sources */,
 				A10000000000000000000002 /* ContentView.swift in Sources */,
 				A10000000000000000000010 /* FilesStorage.swift in Sources */,
@@ -243,6 +282,15 @@
 				A1000000000000000000000C /* QueueItemTests.swift in Sources */,
 				A1000000000000000000000B /* SimulatorListTests.swift in Sources */,
 				A1000000000000000000000F /* SimulatorServiceTests.swift in Sources */,
+				B30000000000000000000020 /* SimulatorApplication.swift in Sources */,
+				B30000000000000000000021 /* SimulatorDeviceSet.swift in Sources */,
+				B30000000000000000000022 /* SimulatorServicing.swift in Sources */,
+				B30000000000000000000023 /* SimulatorSelectionStoring.swift in Sources */,
+				B30000000000000000000024 /* SimulatorCommandRunner.swift in Sources */,
+				B10000000000000000000030 /* AppModelTests.swift in Sources */,
+				B10000000000000000000031 /* CanvasDeliveryTests.swift in Sources */,
+				B10000000000000000000041 /* AppModel.swift in Sources */,
+				B10000000000000000000042 /* SimulatorFixtures.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

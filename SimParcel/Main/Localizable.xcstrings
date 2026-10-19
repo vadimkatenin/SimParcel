@@ -1,0 +1,391 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "queue.emptyStatus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add something to send."
+          }
+        }
+      }
+    },
+    "queue.readyItemStatus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 item ready"
+          }
+        }
+      }
+    },
+    "queue.readyItemsStatus": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld items ready"
+          }
+        }
+      }
+    },
+    "simulators.applicationMissingError": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neither Simulator.app nor DeviceHub.app was found in the selected Xcode (%1$@)."
+          }
+        }
+      }
+    },
+    "simulators.broadcastState": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld running · %2$@"
+          }
+        }
+      }
+    },
+    "simulators.canvas.allLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All Booted Canvas Devices"
+          }
+        }
+      }
+    },
+    "simulators.canvas.bootedSection": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Canvas Devices · Booted"
+          }
+        }
+      }
+    },
+    "simulators.canvas.broadcastState": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld booted · %2$@"
+          }
+        }
+      }
+    },
+    "simulators.canvas.destinationLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld Canvas devices"
+          }
+        }
+      }
+    },
+    "simulators.canvas.emptyState": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No Canvas devices are booted"
+          }
+        }
+      }
+    },
+    "simulators.canvas.managedHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Canvas devices are managed by Xcode. Open a preview there to boot a device."
+          }
+        }
+      }
+    },
+    "simulators.canvas.sendButton": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send to Canvas Device"
+          }
+        }
+      }
+    },
+    "simulators.canvas.sendManyButton": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send to %1$lld Canvas Devices"
+          }
+        }
+      }
+    },
+    "simulators.canvas.startHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open a Canvas preview in Xcode to boot a device, then refresh."
+          }
+        }
+      }
+    },
+    "simulators.canvas.targetState": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · Canvas device · Booted"
+          }
+        }
+      }
+    },
+    "simulators.canvas.unavailableError": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This Canvas device is no longer booted. Open a preview in Xcode, then refresh."
+          }
+        }
+      }
+    },
+    "simulators.canvas.unavailableLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unavailable Canvas Device"
+          }
+        }
+      }
+    },
+    "simulators.canvas.unavailableState": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This Canvas device is no longer booted"
+          }
+        }
+      }
+    },
+    "simulators.destinationLabel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld simulators"
+          }
+        }
+      }
+    },
+    "simulators.deviceHubButton": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in Device Hub"
+          }
+        }
+      }
+    },
+    "simulators.deviceHubHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show this simulator in Device Hub"
+          }
+        }
+      }
+    },
+    "simulators.emptyError": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No iOS simulators found. Install an iOS runtime or resume a Canvas preview in Xcode, then refresh."
+          }
+        }
+      }
+    },
+    "simulators.emptyRunningState": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No simulators are running"
+          }
+        }
+      }
+    },
+    "simulators.emptyTargetHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start a simulator, or choose one from the list."
+          }
+        }
+      }
+    },
+    "simulators.invalidResponseError": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not read the simulator list."
+          }
+        }
+      }
+    },
+    "simulators.runButton": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run Simulator"
+          }
+        }
+      }
+    },
+    "simulators.runningState": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · Running"
+          }
+        }
+      }
+    },
+    "simulators.selectionHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show the selected simulator"
+          }
+        }
+      }
+    },
+    "simulators.selectionPlaceholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a simulator"
+          }
+        }
+      }
+    },
+    "simulators.sendButton": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send to Simulator"
+          }
+        }
+      }
+    },
+    "simulators.sendManyButton": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send to %1$lld Simulators"
+          }
+        }
+      }
+    },
+    "simulators.showButton": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Simulator"
+          }
+        }
+      }
+    },
+    "simulators.showHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring this simulator to the front in the Simulator app"
+          }
+        }
+      }
+    },
+    "simulators.startHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start this simulator and show its window"
+          }
+        }
+      }
+    },
+    "simulators.stoppedState": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · Starts automatically when you send"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
