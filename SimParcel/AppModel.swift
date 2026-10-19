@@ -17,6 +17,7 @@ final class AppModel {
     private static let selectedDeviceKey = "selectedSimulatorID"
 
     private(set) var devices: [SimulatorDevice] = []
+    private(set) var simulatorApplication: SimulatorApplication?
     private(set) var items: [QueueItem] = []
     private(set) var isRefreshing = false
     private(set) var isSending = false
@@ -47,6 +48,20 @@ final class AppModel {
 
     var selectedDevice: SimulatorDevice? {
         devices.first { $0.id == selectedDeviceID }
+    }
+
+    var showSimulatorTitle: String {
+        if selectedDevice?.isBooted == false {
+            return "Run Simulator"
+        }
+        return simulatorApplication?.showTitle ?? "Show Simulator"
+    }
+
+    var showSimulatorHelp: String {
+        if selectedDevice?.isBooted == false {
+            return "Start this simulator and show its window"
+        }
+        return simulatorApplication?.showHelp ?? "Show the selected simulator"
     }
 
     /// The simulators that the next send goes to.
@@ -81,6 +96,7 @@ final class AppModel {
         }
 
         do {
+            simulatorApplication = try? await SimulatorService.simulatorApplication()
             devices = try await SimulatorService.availableDevices()
 
             if selectedDevice == nil && !isAllRunningSelected {

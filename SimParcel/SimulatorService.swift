@@ -14,6 +14,25 @@ enum SimulatorServiceError: LocalizedError {
     }
 }
 
+enum SimulatorApplication: Sendable {
+    case simulator(URL)
+    case deviceHub(URL)
+
+    var showTitle: String {
+        switch self {
+        case .simulator: "Show Simulator"
+        case .deviceHub: "Show in Device Hub"
+        }
+    }
+
+    var showHelp: String {
+        switch self {
+        case .simulator: "Bring this simulator to the front in the Simulator app"
+        case .deviceHub: "Show this simulator in Device Hub"
+        }
+    }
+}
+
 enum SimulatorService {
     static func availableDevices() async throws -> [SimulatorDevice] {
         let output = try await simctl(["list", "devices", "available", "--json"])
@@ -145,14 +164,30 @@ enum SimulatorService {
         return group.appendingPathComponent(FilesStorage.folderName)
     }
 
-    private static func openSimulatorApp(showing device: SimulatorDevice) async throws {
+    static func simulatorApplication() async throws -> SimulatorApplication {
         let developerDirectory = try await run("/usr/bin/xcode-select", ["-p"])
         let path = String(decoding: developerDirectory, as: UTF8.self)
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        let simulatorApp = URL(fileURLWithPath: path).appendingPathComponent("Applications/Simulator.app")
-        let application = FileManager.default.fileExists(atPath: simulatorApp.path) ? simulatorApp.path : "Simulator"
+        let developerURL = URL(fileURLWithPath: path, isDirectory: true)
+        let simulatorApp = developerURL.appendingPathComponent("Applications/Simulator.app")
+        let deviceHubApp = developerURL.deletingLastPathComponent().appendingPathComponent("Applications/DeviceHub.app")
 
-        _ = try await run("/usr/bin/open", ["-a", application, "--args", "-CurrentDeviceUDID", device.id])
+        if FileManager.default.fileExists(atPath: simulatorApp.path) {
+            return .simulator(simulatorApp)
+        } else if FileManager.default.fileExists(atPath: deviceHubApp.path) {
+            return .deviceHub(deviceHubApp)
+        } else {
+            throw SimulatorServiceError.commandFailed("Neither Simulator.app nor DeviceHub.app was found in the selected Xcode (\(path)).")
+        }
+    }
+
+    private static func openSimulatorApp(showing device: SimulatorDevice) async throws {
+        switch try await simulatorApplication() {
+        case .simulator(let app):
+            _ = try await run("/usr/bin/open", ["-a", app.path, "--args", "-CurrentDeviceUDID", device.id])
+        case .deviceHub(let app):
+            _ = try await run("/usr/bin/open", ["-a", app.path, "devices://manage/select?id=\(device.id)"])
+        }
     }
 
     private static func simctl(_ arguments: [String]) async throws -> Data {
