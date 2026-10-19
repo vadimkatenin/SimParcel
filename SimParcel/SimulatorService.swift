@@ -35,9 +35,16 @@ enum SimulatorApplication: Sendable {
 
 enum SimulatorService {
     static func availableDevices() async throws -> [SimulatorDevice] {
-        let output = try await simctl(["list", "devices", "available", "--json"])
+        async let standard = devices(in: .standard)
+        // Previews are optional: older Xcode installations may not have this device set.
+        async let previews = try? devices(in: .previews)
+        return try await standard + (previews ?? []).filter(\.isBooted)
+    }
+
+    private static func devices(in deviceSet: SimulatorDeviceSet) async throws -> [SimulatorDevice] {
+        let output = try await simctl(["list", "devices", "available", "--json"], in: deviceSet)
         do {
-            return try SimulatorList.parse(output)
+            return try SimulatorList.parse(output, deviceSet: deviceSet)
         } catch {
             throw SimulatorServiceError.invalidResponse
         }
@@ -48,17 +55,26 @@ enum SimulatorService {
     /// The state is read again here because the device may have been started or shut down
     /// since the list was last refreshed.
     static func bootIfNeeded(_ device: SimulatorDevice) async throws {
-        let isBooted = try await availableDevices().first { $0.id == device.id }?.isBooted ?? false
+        let isBooted = try await devices(in: device.deviceSet).first { $0.id == device.id }?.isBooted ?? false
+        if device.deviceSet == .previews {
+            guard isBooted else {
+                throw SimulatorServiceError.commandFailed("This Canvas device is no longer booted. Open a preview in Xcode, then refresh.")
+            }
+            return
+        }
         guard !isBooted else {
             return
         }
 
-        _ = try await simctl(["bootstatus", device.id, "-b"])
+        _ = try await simctl(["bootstatus", device.udid, "-b"], in: device.deviceSet)
         try? await openSimulatorApp(showing: device)
     }
 
     static func show(_ device: SimulatorDevice) async throws {
-        _ = try await simctl(["bootstatus", device.id, "-b"])
+        guard device.deviceSet == .standard else {
+            throw SimulatorServiceError.commandFailed("Canvas devices are managed by Xcode. Open a preview there to boot a device.")
+        }
+        _ = try await simctl(["bootstatus", device.udid, "-b"], in: device.deviceSet)
         try await openSimulatorApp(showing: device)
     }
 
@@ -69,12 +85,16 @@ enum SimulatorService {
             throw SimulatorServiceError.commandFailed("\(missing.lastPathComponent) no longer exists.")
         }
 
+        if device.deviceSet == .previews {
+            try await bootIfNeeded(device)
+        }
+
         switch item.kind {
         case .photo, .video, .livePhoto, .contact:
             try await withStagedFiles(item.urls) { files in
                 // One call for all files, so a Live Photo's image and video are paired.
                 do {
-                    _ = try await simctl(["addmedia", device.id] + files.map(\.path))
+                    _ = try await simctl(["addmedia", device.udid] + files.map(\.path), in: device.deviceSet)
                 } catch SimulatorServiceError.commandFailed(let message) {
                     throw SimulatorServiceError.commandFailed(
                         mediaImportMessage(message, files: files, sources: item.urls)
@@ -82,13 +102,13 @@ enum SimulatorService {
                 }
             }
         case .app:
-            _ = try await simctl(["install", device.id, item.urls[0].path])
+            _ = try await simctl(["install", device.udid, item.urls[0].path], in: device.deviceSet)
         case .push:
             let payload = item.urls[0]
             try PushPayload.validate(try Data(contentsOf: payload))
-            _ = try await simctl(["push", device.id, payload.path])
+            _ = try await simctl(["push", device.udid, payload.path], in: device.deviceSet)
         case .link:
-            _ = try await simctl(["openurl", device.id, item.urls[0].absoluteString])
+            _ = try await simctl(["openurl", device.udid, item.urls[0].absoluteString], in: device.deviceSet)
         case .file:
             try FilesStorage.copy(item.urls[0], into: try await filesFolder(on: device))
         }
@@ -151,7 +171,7 @@ enum SimulatorService {
 
     /// The Files app's On My iPhone folder on a device.
     private static func filesFolder(on device: SimulatorDevice) async throws -> URL {
-        let groups = try? await simctl(["get_app_container", device.id, "com.apple.DocumentsApp", "groups"])
+        let groups = try? await simctl(["get_app_container", device.udid, "com.apple.DocumentsApp", "groups"], in: device.deviceSet)
         let group = groups
             .flatMap { FilesStorage.groupPath(inGroupsOutput: String(decoding: $0, as: UTF8.self)) }
             .map { URL(fileURLWithPath: $0) }
@@ -184,14 +204,14 @@ enum SimulatorService {
     private static func openSimulatorApp(showing device: SimulatorDevice) async throws {
         switch try await simulatorApplication() {
         case .simulator(let app):
-            _ = try await run("/usr/bin/open", ["-a", app.path, "--args", "-CurrentDeviceUDID", device.id])
+            _ = try await run("/usr/bin/open", ["-a", app.path, "--args", "-CurrentDeviceUDID", device.udid])
         case .deviceHub(let app):
-            _ = try await run("/usr/bin/open", ["-a", app.path, "devices://manage/select?id=\(device.id)"])
+            _ = try await run("/usr/bin/open", ["-a", app.path, "devices://manage/select?id=\(device.udid)"])
         }
     }
 
-    private static func simctl(_ arguments: [String]) async throws -> Data {
-        try await run("/usr/bin/xcrun", ["simctl"] + arguments)
+    private static func simctl(_ arguments: [String], in deviceSet: SimulatorDeviceSet = .standard) async throws -> Data {
+        try await run("/usr/bin/xcrun", ["simctl"] + deviceSet.arguments(for: arguments))
     }
 
     /// Runs a command without blocking a thread while waiting for it, and returns its standard output.

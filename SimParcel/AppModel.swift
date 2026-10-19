@@ -14,6 +14,7 @@ final class AppModel {
 
     /// Selection value that sends items to every running simulator.
     static let allRunningID = "all-running"
+    static let allPreviewsID = "all-previews"
     private static let selectedDeviceKey = "selectedSimulatorID"
 
     private(set) var devices: [SimulatorDevice] = []
@@ -35,11 +36,27 @@ final class AppModel {
     }
 
     var shutdownRuntimeGroups: [SimulatorRuntimeGroup] {
-        SimulatorList.shutdownGroups(in: devices)
+        SimulatorList.shutdownGroups(in: devices.filter { $0.deviceSet == .standard })
     }
 
     var runningDevices: [SimulatorDevice] {
-        SimulatorList.runningDevices(in: devices)
+        SimulatorList.runningDevices(in: devices.filter { $0.deviceSet == .standard })
+    }
+
+    var bootedCanvasDevices: [SimulatorDevice] {
+        SimulatorList.runningDevices(in: devices.filter { $0.deviceSet == .previews })
+    }
+
+    var isAllPreviewsSelected: Bool {
+        selectedDeviceID == Self.allPreviewsID
+    }
+
+    var isBroadcastSelected: Bool {
+        isAllRunningSelected || isAllPreviewsSelected
+    }
+
+    var canShowSelectedDevice: Bool {
+        selectedDevice?.deviceSet == .standard && !isBusy
     }
 
     var isAllRunningSelected: Bool {
@@ -58,6 +75,9 @@ final class AppModel {
     }
 
     var showSimulatorHelp: String {
+        if isAllPreviewsSelected || selectedDevice?.deviceSet == .previews {
+            return "Canvas devices are managed by Xcode. Open a preview there to boot a device."
+        }
         if selectedDevice?.isBooted == false {
             return "Start this simulator and show its window"
         }
@@ -68,6 +88,9 @@ final class AppModel {
     var targets: [SimulatorDevice] {
         if isAllRunningSelected {
             return runningDevices
+        }
+        if isAllPreviewsSelected {
+            return bootedCanvasDevices
         }
 
         return selectedDevice.map { [$0] } ?? []
@@ -99,12 +122,12 @@ final class AppModel {
             simulatorApplication = try? await SimulatorService.simulatorApplication()
             devices = try await SimulatorService.availableDevices()
 
-            if selectedDevice == nil && !isAllRunningSelected {
+            if selectedDevice == nil && !isBroadcastSelected {
                 selectedDeviceID = SimulatorList.preferredDevice(in: devices)?.id ?? ""
             }
 
             if devices.isEmpty {
-                status = .failure("No iOS simulators found. Install an iOS runtime in Xcode, then refresh.")
+                status = .failure("No iOS simulators found. Install an iOS runtime or resume a Canvas preview in Xcode, then refresh.")
             } else if case .failure = status, failedCount == 0 {
                 status = .idle
             }
@@ -226,7 +249,7 @@ final class AppModel {
         }
 
         let noun = succeeded == 1 ? "item" : "items"
-        let destination = targets.count == 1 ? targets[0].name : "\(targets.count) simulators"
+        let destination = targets.count == 1 ? targets[0].label : "\(targets.count) \(isAllPreviewsSelected ? "Canvas devices" : "simulators")"
         if let lastFailure {
             let failed = items.filter { $0.failure != nil }.count
             let reason = failed == 1 ? ": \(lastFailure.split(whereSeparator: \.isNewline).first ?? "")" : "."
@@ -239,7 +262,7 @@ final class AppModel {
     }
 
     func showSelectedDevice() async {
-        guard let device = selectedDevice, !isBusy else {
+        guard let device = selectedDevice, canShowSelectedDevice else {
             return
         }
 

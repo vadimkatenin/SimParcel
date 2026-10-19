@@ -130,11 +130,25 @@ private struct SimulatorBar: View {
                         Text("All Running Simulators")
                             .tag(AppModel.allRunningID)
 
+                        if !model.bootedCanvasDevices.isEmpty || model.isAllPreviewsSelected {
+                            Text("All Booted Canvas Devices")
+                                .tag(AppModel.allPreviewsID)
+                        }
+
                         Divider()
 
                         if !model.runningDevices.isEmpty {
                             Section("Running") {
                                 ForEach(model.runningDevices) { device in
+                                    Text(device.label)
+                                        .tag(device.id)
+                                }
+                            }
+                        }
+
+                        if !model.bootedCanvasDevices.isEmpty {
+                            Section("Canvas Devices · Booted") {
+                                ForEach(model.bootedCanvasDevices) { device in
                                     Text(device.label)
                                         .tag(device.id)
                                 }
@@ -169,7 +183,7 @@ private struct SimulatorBar: View {
                     .labelStyle(.titleAndIcon)
             }
             .help(model.showSimulatorHelp)
-            .disabled(model.selectedDevice == nil || model.isBusy)
+            .disabled(!model.canShowSelectedDevice)
 
             Button {
                 Task {
@@ -187,7 +201,7 @@ private struct SimulatorBar: View {
     }
 
     private var symbolName: String {
-        if model.isAllRunningSelected {
+        if model.isBroadcastSelected {
             return "rectangle.stack"
         }
 
@@ -219,15 +233,16 @@ private struct TargetStateLabel: View {
     }
 
     private var text: String {
-        if model.isAllRunningSelected {
-            let running = model.runningDevices
+        if model.isBroadcastSelected {
+            let running = model.targets
+            let state = model.isAllPreviewsSelected ? "booted" : "running"
             switch running.count {
             case 0:
-                return "No simulators are running"
+                return model.isAllPreviewsSelected ? "No Canvas devices are booted" : "No simulators are running"
             case 1:
-                return "1 running · \(running[0].name)"
+                return "1 \(state) · \(running[0].name)"
             default:
-                return "\(running.count) running · \(running.map(\.name).joined(separator: ", "))"
+                return "\(running.count) \(state) · \(running.map(\.name).joined(separator: ", "))"
             }
         }
 
@@ -236,7 +251,7 @@ private struct TargetStateLabel: View {
         }
 
         return device.isBooted
-            ? "\(device.runtime.name) · Running"
+            ? "\(device.runtime.name) · \(device.deviceSet == .previews ? "Canvas device · Booted" : "Running")"
             : "\(device.runtime.name) · Starts automatically when you send"
     }
 }
@@ -354,7 +369,11 @@ private struct FooterBar: View {
 
     private var sendTitle: String {
         let count = model.targets.count
-        return model.isAllRunningSelected && count > 1 ? "Send to \(count) Simulators" : "Send to Simulator"
+        let isCanvas = model.isAllPreviewsSelected || model.selectedDevice?.deviceSet == .previews
+        if model.isBroadcastSelected && count > 1 {
+            return "Send to \(count) \(isCanvas ? "Canvas Devices" : "Simulators")"
+        }
+        return isCanvas ? "Send to Canvas Device" : "Send to Simulator"
     }
 }
 
@@ -406,8 +425,10 @@ private struct StatusView: View {
     }
 
     private var idleMessage: String {
-        if model.isAllRunningSelected && model.targets.isEmpty {
-            return "Start a simulator, or choose one from the list."
+        if model.isBroadcastSelected && model.targets.isEmpty {
+            return model.isAllPreviewsSelected
+                ? "Open a Canvas preview in Xcode to boot a device, then refresh."
+                : "Start a simulator, or choose one from the list."
         }
 
         switch model.items.count {
