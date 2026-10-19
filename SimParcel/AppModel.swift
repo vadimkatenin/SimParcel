@@ -75,13 +75,9 @@ final class AppModel {
             return
         }
 
-        let previousStatus = status
         isRefreshing = true
         defer {
             isRefreshing = false
-            if preservingStatus {
-                status = previousStatus
-            }
         }
 
         do {
@@ -93,7 +89,7 @@ final class AppModel {
 
             if devices.isEmpty {
                 status = .failure("No iOS simulators found. Install an iOS runtime in Xcode, then refresh.")
-            } else if case .failure = status, failedCount == 0 {
+            } else if !preservingStatus, case .failure = status, failedCount == 0 {
                 status = .idle
             }
         } catch {
@@ -242,9 +238,7 @@ final class AppModel {
 
         do {
             try await SimulatorService.show(device)
-            if case .working = status {
-                status = .idle
-            }
+            status = .idle
         } catch {
             status = .failure("Could not open \(device.name): \(error.localizedDescription)")
         }
