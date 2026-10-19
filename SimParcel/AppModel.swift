@@ -14,7 +14,7 @@ final class AppModel {
 
     /// Selection value that sends items to every running simulator.
     static let allRunningID = "all-running"
-    private static let selectedDeviceKey = "selectedSimulatorID"
+    static let allPreviewsID = "all-previews"
 
     private(set) var devices: [SimulatorDevice] = []
     private(set) var simulatorApplication: SimulatorApplication?
@@ -28,18 +28,41 @@ final class AppModel {
     var isFilePickerPresented = false
     var isLinkPromptPresented = false
 
-    var selectedDeviceID: String = UserDefaults.standard.string(forKey: AppModel.selectedDeviceKey) ?? "" {
+    private let simulatorService: any SimulatorServicing
+    private let selectionStore: any SimulatorSelectionStoring
+
+    var selectedDeviceID: String {
         didSet {
-            UserDefaults.standard.set(selectedDeviceID, forKey: Self.selectedDeviceKey)
+            selectionStore.selectedSimulatorID = selectedDeviceID
         }
     }
 
     var shutdownRuntimeGroups: [SimulatorRuntimeGroup] {
-        SimulatorList.shutdownGroups(in: devices)
+        SimulatorList.shutdownGroups(in: devices.filter { $0.deviceSet == .standard })
     }
 
     var runningDevices: [SimulatorDevice] {
-        SimulatorList.runningDevices(in: devices)
+        SimulatorList.runningDevices(in: devices.filter { $0.deviceSet == .standard })
+    }
+
+    var bootedCanvasDevices: [SimulatorDevice] {
+        SimulatorList.runningDevices(in: devices.filter { $0.deviceSet == .previews })
+    }
+
+    var isAllPreviewsSelected: Bool {
+        selectedDeviceID == Self.allPreviewsID
+    }
+
+    var isCanvasDestinationSelected: Bool {
+        isAllPreviewsSelected || selectedDeviceID.hasPrefix("previews:")
+    }
+
+    var isBroadcastSelected: Bool {
+        isAllRunningSelected || isAllPreviewsSelected
+    }
+
+    var canShowSelectedDevice: Bool {
+        selectedDevice?.deviceSet == .standard && !isBusy
     }
 
     var isAllRunningSelected: Bool {
@@ -52,22 +75,32 @@ final class AppModel {
 
     var showSimulatorTitle: String {
         if selectedDevice?.isBooted == false {
-            return "Run Simulator"
+            return String(localized: "simulators.runButton")
         }
-        return simulatorApplication?.showTitle ?? "Show Simulator"
+
+        return simulatorApplication?.showTitle ?? String(localized: "simulators.showButton")
     }
 
     var showSimulatorHelp: String {
-        if selectedDevice?.isBooted == false {
-            return "Start this simulator and show its window"
+        if isCanvasDestinationSelected {
+            return String(localized: "simulators.canvas.managedHint")
         }
-        return simulatorApplication?.showHelp ?? "Show the selected simulator"
+
+        if selectedDevice?.isBooted == false {
+            return String(localized: "simulators.startHint")
+        }
+
+        return simulatorApplication?.showHelp ?? String(localized: "simulators.selectionHint")
     }
 
     /// The simulators that the next send goes to.
     var targets: [SimulatorDevice] {
         if isAllRunningSelected {
             return runningDevices
+        }
+
+        if isAllPreviewsSelected {
+            return bootedCanvasDevices
         }
 
         return selectedDevice.map { [$0] } ?? []
@@ -85,27 +118,107 @@ final class AppModel {
         items.filter { $0.failure != nil }.count
     }
 
-    func refreshDevices() async {
+    var targetStateText: String {
+        if isBroadcastSelected {
+            let running = targets
+            guard !running.isEmpty else {
+                return isAllPreviewsSelected
+                    ? String(localized: "simulators.canvas.emptyState")
+                    : String(localized: "simulators.emptyRunningState")
+            }
+
+            let format = isAllPreviewsSelected
+                ? String(localized: "simulators.canvas.broadcastState")
+                : String(localized: "simulators.broadcastState")
+
+            return String(format: format, running.count, running.map(\.name).joined(separator: ", "))
+        }
+
+        guard let device = selectedDevice else {
+            return isCanvasDestinationSelected
+                ? String(localized: "simulators.canvas.unavailableState")
+                : String(localized: "simulators.selectionPlaceholder")
+        }
+
+        let format: String
+        if !device.isBooted {
+            format = String(localized: "simulators.stoppedState")
+        } else if device.deviceSet == .previews {
+            format = String(localized: "simulators.canvas.targetState")
+        } else {
+            format = String(localized: "simulators.runningState")
+        }
+
+        return String(format: format, device.runtime.name)
+    }
+
+    var sendTitle: String {
+        let count = targets.count
+        let isCanvas = isCanvasDestinationSelected
+        if isBroadcastSelected && count > 1 {
+            let format = isCanvas
+                ? String(localized: "simulators.canvas.sendManyButton")
+                : String(localized: "simulators.sendManyButton")
+
+            return String(format: format, count)
+        }
+
+        return isCanvas
+            ? String(localized: "simulators.canvas.sendButton")
+            : String(localized: "simulators.sendButton")
+    }
+
+    var idleStatusMessage: String {
+        if targets.isEmpty && (isBroadcastSelected || isCanvasDestinationSelected) {
+            return isCanvasDestinationSelected
+                ? String(localized: "simulators.canvas.startHint")
+                : String(localized: "simulators.emptyTargetHint")
+        }
+
+        switch items.count {
+        case 0:
+            return String(localized: "queue.emptyStatus")
+        case 1:
+            return String(localized: "queue.readyItemStatus")
+        default:
+            return String(format: String(localized: "queue.readyItemsStatus"), items.count)
+        }
+    }
+
+    init(
+        simulatorService: any SimulatorServicing = SimulatorService(),
+        selectionStore: any SimulatorSelectionStoring = UserDefaults.standard
+    ) {
+        self.simulatorService = simulatorService
+        self.selectionStore = selectionStore
+        selectedDeviceID = selectionStore.selectedSimulatorID
+    }
+
+    func refreshDevices(preservingStatus: Bool = false) async {
         guard !isRefreshing else {
             return
         }
 
         isRefreshing = true
+        if !preservingStatus, failedCount == 0, case .failure = status {
+            status = .idle
+        }
+
         defer {
             isRefreshing = false
         }
 
         do {
-            simulatorApplication = try? await SimulatorService.simulatorApplication()
-            devices = try await SimulatorService.availableDevices()
+            simulatorApplication = try? await simulatorService.simulatorApplication()
+            devices = try await simulatorService.availableDevices()
 
-            if selectedDevice == nil && !isAllRunningSelected {
+            if selectedDevice == nil && !isBroadcastSelected && !isCanvasDestinationSelected {
                 selectedDeviceID = SimulatorList.preferredDevice(in: devices)?.id ?? ""
             }
 
             if devices.isEmpty {
-                status = .failure("No iOS simulators found. Install an iOS runtime in Xcode, then refresh.")
-            } else if case .failure = status, failedCount == 0 {
+                status = .failure(String(localized: "simulators.emptyError"))
+            } else if !preservingStatus, case .failure = status, failedCount == 0 {
                 status = .idle
             }
         } catch {
@@ -188,7 +301,7 @@ final class AppModel {
                 if !device.isBooted {
                     status = .working("Starting \(device.name)…")
                 }
-                try await SimulatorService.bootIfNeeded(device)
+                try await simulatorService.bootIfNeeded(device)
             } catch {
                 status = .failure("Could not start \(device.name): \(error.localizedDescription)")
                 return
@@ -199,14 +312,24 @@ final class AppModel {
         var lastFailure: String?
 
         for item in items.sorted(by: { $0.kind.sendOrder < $1.kind.sendOrder }) {
+            guard !Task.isCancelled else {
+                status = .idle
+                return
+            }
+
             sendingItemID = item.id
             var failures: [String] = []
 
             for device in targets {
+                guard !Task.isCancelled else {
+                    status = .idle
+                    return
+                }
+
                 status = .working("Sending \(completedSteps + 1) of \(totalSteps)…")
 
                 do {
-                    try await SimulatorService.send(item, to: device)
+                    try await simulatorService.send(item, to: device)
                 } catch {
                     let message = error.localizedDescription
                     failures.append(targets.count > 1 ? "\(device.name): \(message)" : message)
@@ -226,7 +349,16 @@ final class AppModel {
         }
 
         let noun = succeeded == 1 ? "item" : "items"
-        let destination = targets.count == 1 ? targets[0].name : "\(targets.count) simulators"
+        let destination: String
+        if targets.count == 1 {
+            destination = targets[0].label
+        } else {
+            let format = isAllPreviewsSelected
+                ? String(localized: "simulators.canvas.destinationLabel")
+                : String(localized: "simulators.destinationLabel")
+            destination = String(format: format, targets.count)
+        }
+
         if let lastFailure {
             let failed = items.filter { $0.failure != nil }.count
             let reason = failed == 1 ? ": \(lastFailure.split(whereSeparator: \.isNewline).first ?? "")" : "."
@@ -235,11 +367,11 @@ final class AppModel {
             status = .success("Sent \(succeeded) \(noun) to \(destination).")
         }
 
-        await refreshDevices()
+        await refreshDevices(preservingStatus: true)
     }
 
     func showSelectedDevice() async {
-        guard let device = selectedDevice, !isBusy else {
+        guard let device = selectedDevice, canShowSelectedDevice else {
             return
         }
 
@@ -253,14 +385,12 @@ final class AppModel {
         }
 
         do {
-            try await SimulatorService.show(device)
-            if case .working = status {
-                status = .idle
-            }
+            try await simulatorService.show(device)
+            status = .idle
         } catch {
             status = .failure("Could not open \(device.name): \(error.localizedDescription)")
         }
 
-        await refreshDevices()
+        await refreshDevices(preservingStatus: true)
     }
 }

@@ -130,11 +130,30 @@ private struct SimulatorBar: View {
                         Text("All Running Simulators")
                             .tag(AppModel.allRunningID)
 
+                        if !model.bootedCanvasDevices.isEmpty || model.isAllPreviewsSelected {
+                            Text("simulators.canvas.allLabel")
+                                .tag(AppModel.allPreviewsID)
+                        }
+
+                        if model.isCanvasDestinationSelected && !model.isAllPreviewsSelected && model.selectedDevice == nil {
+                            Text("simulators.canvas.unavailableLabel")
+                                .tag(model.selectedDeviceID)
+                        }
+
                         Divider()
 
                         if !model.runningDevices.isEmpty {
                             Section("Running") {
                                 ForEach(model.runningDevices) { device in
+                                    Text(device.label)
+                                        .tag(device.id)
+                                }
+                            }
+                        }
+
+                        if !model.bootedCanvasDevices.isEmpty {
+                            Section("simulators.canvas.bootedSection") {
+                                ForEach(model.bootedCanvasDevices) { device in
                                     Text(device.label)
                                         .tag(device.id)
                                 }
@@ -169,7 +188,7 @@ private struct SimulatorBar: View {
                     .labelStyle(.titleAndIcon)
             }
             .help(model.showSimulatorHelp)
-            .disabled(model.selectedDevice == nil || model.isBusy)
+            .disabled(!model.canShowSelectedDevice)
 
             Button {
                 Task {
@@ -187,7 +206,7 @@ private struct SimulatorBar: View {
     }
 
     private var symbolName: String {
-        if model.isAllRunningSelected {
+        if model.isBroadcastSelected {
             return "rectangle.stack"
         }
 
@@ -205,39 +224,17 @@ private struct TargetStateLabel: View {
                 .frame(width: 7, height: 7)
                 .accessibilityHidden(true)
 
-            Text(text)
+            Text(model.targetStateText)
                 .lineLimit(1)
                 .truncationMode(.tail)
         }
         .font(.caption)
         .foregroundStyle(.secondary)
-        .help(text)
+        .help(model.targetStateText)
     }
 
     private var isRunning: Bool {
         !model.targets.isEmpty && model.targets.allSatisfy(\.isBooted)
-    }
-
-    private var text: String {
-        if model.isAllRunningSelected {
-            let running = model.runningDevices
-            switch running.count {
-            case 0:
-                return "No simulators are running"
-            case 1:
-                return "1 running · \(running[0].name)"
-            default:
-                return "\(running.count) running · \(running.map(\.name).joined(separator: ", "))"
-            }
-        }
-
-        guard let device = model.selectedDevice else {
-            return "Choose a simulator"
-        }
-
-        return device.isBooted
-            ? "\(device.runtime.name) · Running"
-            : "\(device.runtime.name) · Starts automatically when you send"
     }
 }
 
@@ -342,7 +339,7 @@ private struct FooterBar: View {
                     await model.sendAll()
                 }
             } label: {
-                Text(sendTitle)
+                Text(model.sendTitle)
                     .frame(minWidth: 120)
             }
             .buttonStyle(.borderedProminent)
@@ -350,11 +347,6 @@ private struct FooterBar: View {
             .disabled(!model.canSend)
         }
         .controlSize(.large)
-    }
-
-    private var sendTitle: String {
-        let count = model.targets.count
-        return model.isAllRunningSelected && count > 1 ? "Send to \(count) Simulators" : "Send to Simulator"
     }
 }
 
@@ -382,7 +374,7 @@ private struct StatusView: View {
     private var statusText: some View {
         switch model.status {
         case .idle:
-            Text(idleMessage)
+            Text(model.idleStatusMessage)
                 .foregroundStyle(.secondary)
         case .info(let message, let detail):
             Label(message, systemImage: "info.circle")
@@ -402,21 +394,6 @@ private struct StatusView: View {
             Label(message, systemImage: "exclamationmark.triangle.fill")
                 .foregroundStyle(.red)
                 .help(detail ?? message)
-        }
-    }
-
-    private var idleMessage: String {
-        if model.isAllRunningSelected && model.targets.isEmpty {
-            return "Start a simulator, or choose one from the list."
-        }
-
-        switch model.items.count {
-        case 0:
-            return "Add something to send."
-        case 1:
-            return "1 item ready"
-        case let count:
-            return "\(count) items ready"
         }
     }
 }

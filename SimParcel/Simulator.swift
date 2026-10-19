@@ -39,14 +39,36 @@ struct SimulatorRuntime: Hashable, Comparable, Sendable {
 }
 
 struct SimulatorDevice: Identifiable, Hashable, Sendable {
-    let id: String
+    let udid: String
     let name: String
     let runtime: SimulatorRuntime
     let isBooted: Bool
     let dataPath: String?
+    let deviceSet: SimulatorDeviceSet
+
+    init(
+        id: String,
+        name: String,
+        runtime: SimulatorRuntime,
+        isBooted: Bool,
+        dataPath: String?,
+        deviceSet: SimulatorDeviceSet = .standard
+    ) {
+        self.udid = id
+        self.name = name
+        self.runtime = runtime
+        self.isBooted = isBooted
+        self.dataPath = dataPath
+        self.deviceSet = deviceSet
+    }
+
+    // Preserve existing saved simulator selections; preview IDs belong to a separate set.
+    var id: String {
+        deviceSet == .previews ? "previews:\(udid)" : udid
+    }
 
     var label: String {
-        "\(name) · \(runtime.name)"
+        "\(name) · \(runtime.name)" + (deviceSet == .previews ? " · \(udid.suffix(6))" : "")
     }
 
     var symbolName: String {
@@ -68,7 +90,7 @@ enum SimulatorList {
     static let supportedPlatforms: Set<String> = ["iOS"]
 
     /// Decodes the output of `simctl list devices available --json`.
-    static func parse(_ data: Data) throws -> [SimulatorDevice] {
+    static func parse(_ data: Data, deviceSet: SimulatorDeviceSet = .standard) throws -> [SimulatorDevice] {
         let response = try JSONDecoder().decode(Response.self, from: data)
 
         return response.devices.flatMap { identifier, devices -> [SimulatorDevice] in
@@ -83,7 +105,8 @@ enum SimulatorList {
                     name: device.name,
                     runtime: runtime,
                     isBooted: device.state == "Booted",
-                    dataPath: device.dataPath
+                    dataPath: device.dataPath,
+                    deviceSet: deviceSet
                 )
             }
         }
