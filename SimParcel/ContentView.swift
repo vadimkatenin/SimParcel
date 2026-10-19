@@ -170,14 +170,13 @@ private struct SimulatorBar: View {
                         }
                     }
                     .labelsHidden()
-                    .fixedSize()
+                    .fixedSize(horizontal: false, vertical: true)
                     .disabled(model.isBusy)
 
                     TargetStateLabel()
                 }
             }
-
-            Spacer(minLength: 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             Button {
                 Task {
@@ -225,11 +224,13 @@ private struct TargetStateLabel: View {
                 .accessibilityHidden(true)
 
             Text(model.targetStateText)
-                .lineLimit(1)
+                .lineLimit(2)
                 .truncationMode(.tail)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .font(.caption)
         .foregroundStyle(.secondary)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .help(model.targetStateText)
     }
 
