@@ -165,7 +165,10 @@ private struct SimulatorBar: View {
                     await model.showSelectedDevice()
                 }
             } label: {
-                Label("Show Simulator", systemImage: "arrow.up.forward.app")
+                Label(
+                    model.selectedDevice?.isBooted == false ? "Run Simulator" : "Show Simulator",
+                    systemImage: "arrow.up.forward.app"
+                )
                     .labelStyle(.titleAndIcon)
             }
             .help("Start this simulator and bring the Simulator app to the front")
