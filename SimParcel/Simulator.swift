@@ -9,7 +9,7 @@ struct SimulatorRuntime: Hashable, Comparable, Sendable {
         self.version = version
     }
 
-    /// Parses runtime identifiers such as `com.apple.CoreSimulator.SimRuntime.iOS-27-1`.
+    /// Parses the version before an optional model suffix, as in `iOS-27-2-iPhone19-4`.
     init?(identifier: String) {
         let prefix = "com.apple.CoreSimulator.SimRuntime."
         guard identifier.hasPrefix(prefix) else {
@@ -17,8 +17,13 @@ struct SimulatorRuntime: Hashable, Comparable, Sendable {
         }
 
         let components = identifier.dropFirst(prefix.count).split(separator: "-")
-        let version = components.dropFirst().compactMap { Int($0) }
-        guard let platform = components.first, version.count == components.count - 1 else {
+
+        let version = components.dropFirst()
+            .map { Int($0) }
+            .prefix { $0 != nil }
+            .compactMap { $0 }
+
+        guard let platform = components.first, !version.isEmpty else {
             return nil
         }
 

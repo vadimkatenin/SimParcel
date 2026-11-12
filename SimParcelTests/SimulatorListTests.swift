@@ -41,6 +41,26 @@ struct SimulatorListTests {
         #expect(devices.first { $0.id == "C" }?.isBooted == true)
     }
 
+    /// Keeps the device-specific runtime in the same picker section as the standard runtime.
+    @Test func groupsDuoWithOtherDevicesOnTheSameIOSVersion() throws {
+        let data = Data("""
+        {
+          "devices": {
+            "com.apple.CoreSimulator.SimRuntime.iOS-27-2-iPhone19-4": [
+              { "udid": "93A8E793-7A27-490A-A522-4F75D8923882", "name": "iPhone Duo", "state": "Shutdown" }
+            ],
+            "com.apple.CoreSimulator.SimRuntime.iOS-27-2": [
+              { "udid": "0CB83AED-016B-4D13-AE56-490E618E04C1", "name": "iPhone 18 Pro", "state": "Shutdown" }
+            ]
+          }
+        }
+        """.utf8)
+
+        let groups = SimulatorList.shutdownGroups(in: try SimulatorList.parse(data))
+        #expect(groups.map(\.runtime.name) == ["iOS 27.2"])
+        #expect(Set(groups.flatMap(\.devices).map(\.name)) == ["iPhone 18 Pro", "iPhone Duo"])
+    }
+
     @Test func rejectsNonJSONOutput() {
         #expect(throws: (any Error).self) {
             try SimulatorList.parse(Data("xcrun: warning\n{}".utf8))
